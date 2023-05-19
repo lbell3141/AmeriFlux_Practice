@@ -5,8 +5,6 @@
 #Load data into studio
 dat_SRC=read.csv("AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv", header = TRUE, na.strings= "-9999", skip=0, sep = ",")
 
-datSRC="AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
-
 #assigning NULL to remove from values
 #only for char?
 dat_SRC[["NA"]]<-NULL
@@ -47,7 +45,6 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
   dat_ymdhm= as.Date(dat_SRC$TIMESTAMP_START, format = YYYY-MM-DD-HH-MM)
   t_doy = format (dat_ymdhm, "%j")
   t_md = substr(dat_ymdhm, 6, 13)
-  t_md= as.Date(t_md, format = "%m-%d")
   
   exdat= format(dat_SRC$TIMESTAMP_START, "y%-%m-%d")
  
@@ -121,11 +118,39 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
     
     dat_SRC$year=format(dat_SRC$TIMESTAMP_START, "%y")
 
+ #using aggregate to find the mean for swc for each month 
+    #create new data frame with just the two columns of interest (month and swc)
+  m_dat=data.frame(subjects=dat_SRC$Month,
+                   val=dat_SRC$SWC_F_MDS_1)
+    #check to see the new df looks right:
+  print(m_dat)
     
-   aggregate(df_1,
-             list()
-             dat_SRC$Month + dat_SRC$year, dat_SRC, mean)  
+    #use mean function with new df and list in aggregate; print to check:
+  print(aggregate(m_dat$val, list(m_dat$subjects), FUN=mean))
 
+    #also need to find the monthly average for each year: 
+      #extract month and year
+          dat_SRC$year= format(dat_SRC$TIMESTAMP_START, "%Y")
+          dat_SRC$Month=months(dat_SRC$TIMESTAMP_START)
+      #create new df with three columns (yr, mon, and swc) and check w/ print
+          my_dat=data.frame(years=dat_SRC$year,
+                            mon=dat_SRC$Month,
+                            val=dat_SRC$SWC_F_MDS_1)
+          print(my_dat)
+      #use aggregate with new df and mean function; check with print
+          print(aggregate(my_dat$val, list(dat_SRC$year), FUN=mean))
+    
+  #trying to group months by year:
+      library(dplyr)
+          print(group_by(my_dat, dat_SRC$year, dat_SRC$Month))
+          
+          (aggregate(group_by(my_dat, dat_SRC$year, dat_SRC$Month), list(dat_SRC$Month), FUN=mean))
+    
+      library(data.table)
+          setDT(my_dat)
+            my_dat[ ,list(mean=mean(dat_SRC$SWC_F_MDS_1)), by=c(dat_SRC$year, dat_SRC$Month)]
   
-  
-  
+            
+      my_dat %>%
+        group_by(c(dat_SRC$year, dat_SRC$Month)) %>%
+        summarise_at(vars(dat_SRC$SWC_F_MDS_1), list(name=mean))
