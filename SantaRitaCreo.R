@@ -50,81 +50,82 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
   t_md= as.Date(t_md, format = "%m-%d")
   
   exdat= format(dat_SRC$TIMESTAMP_START, "y%-%m-%d")
+ 
   
-  library(ggplot2
-          )
-  #ggplot
-  
-  ggplot(dat_SRC, aes(TIMESTAMP_START, y=swc_stand),
-    scale_x_continuous(n.breaks = 10))
-    
-  ggplot(dat_SRC, aes(x=as.Date(TIMESTAMP_START), y=swc_stand))+
-    geom_line()+
-    #geom_point()+
-    scale_x_date(date_breaks="6 month")+
-    theme_minimal()+
-    xlab("Time")+
-    ylab("Soil Water Content")+
-    theme(axis.text.x= element_text(angle = 45, hjust = 1)
-          )
-  
-  #line graph p.241
-  lg=plot(dat_SRC$TIMESTAMP_START, swc_stand, 
-          main= "Soil Water Content vs. Time",
-          xlab= "Time (yr)",
-          ylab= "Soil Water Content",
-          type = "l",
-          col= "black",
-          lwd= 1,
-          fg= "black",
-          )
-                 
-  par(bg="white")
-  grid()
-  abline(h=0, lty="dotted", col="red", lwd=3)
-  
-max(dat_SRC$TIMESTAMP_START)
-     axis(side=1,
-      las=1,
-       dat_SRC$TIMESTAMP_START,
-       format(dat_SRC$TIMESTAMP_START, "y%-%m-%d"),
-      scale_x_continuous(n.breaks=10000),
+#ggplot for time and soil moisture
+  library(ggplot2)
+      ggplot(dat_SRC, aes(x=as.Date(TIMESTAMP_START), y=swc_stand))+
+        geom_line()+
+        scale_x_date(date_breaks="6 month")+
+        theme_minimal()+
+        xlab("Time")+
+        ylab("Soil Water Content")+
+        theme(axis.text.x= element_text(angle = 45, hjust = 1))+
+        geom_hline(yintercept = 0, linetype="dashed", color="red", size=1.2)
       
-      scale_x_date(date_breaks = "months", date_labels = "%b-%y")
-  )
-
-     scale_x_continuous(n.breaks=100)
-     
-     scale_x_date(date_breaks = "months", date_labels = "%b-%y")
-  
-  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust = 1))
-  
-  theme(axis.text.x = element_text(angle = 45))
-  
-    
-  text(x=1:length(format(dat_SRC$TIMESTAMP_START, "y%-%m-%d")),
-       y=par("usr")[3]-0.45,
-       labels = names(format(dat_SRC$TIMESTAMP_START, "y%-%m-%d")),
-       xpd=NA,
-       srt=35,
-       adj=0.965,
-      cex = 1)
+#base R plot for time and soil moisture
+  #line graph p.241
+      lg=plot(dat_SRC$TIMESTAMP_START, swc_stand, 
+              main= "Soil Water Content vs. Time",
+              xlab= "Time (yr)",
+              ylab= "Soil Water Content",
+              type = "l",
+              col= "black",
+              lwd= 1,
+              fg= "black",
+              )
+        par(bg="white")
+        grid()
+        abline(h=0, lty="dotted", col="red", lwd=3)
        
-       
-       
-       
-     las=2,
+    #formatting x axis by itself 
+     axis(side=1,
+      las=2,
        dat_SRC$TIMESTAMP_START,
-       format(dat_SRC$TIMESTAMP_START, "y%-%m-%d"),
-       )
-  
-library(ggplot2)
-  install.packages("scales")
-  library(scales)
-  ggplot(dat_)
+       format(dat_SRC$TIMESTAMP_START, "y%-%m-%d"))
+      
+#linear regression for soil moisture and GPP  
+    #quick check of plot:
+      plot(dat_SRC$SWC_F_MDS_1, dat_SRC$GPP_DT_VUT_25) 
+    
+    #Using ggplot to plot variables and linear regression
+      plot_1=ggplot(dat_SRC, aes(x=dat_SRC$SWC_F_MDS_1,y=dat_SRC$GPP_DT_VUT_25 ))
+        plot_1+
+          geom_point()+ 
+          labs(x="soil water content", y="GPP")+
+          geom_smooth(method = "lm")
+        
+    #Calculating correlation coeff. (esp for data with missing values)
+        sm_gpp_cor= cor.test(dat_SRC$SWC_F_MDS_1, dat_SRC$GPP_DT_VUT_25, method="pearson", conf.level=0.95)      
+      #or use:
+        cor(dat_SRC$SWC_F_MDS_1, dat_SRC$GPP_DT_VUT_25, use ="pairwise.complete.obs")
+ 
+#linear regression for soil heat flux (G) and latent heat flux (LE)
+    plot(dat_SRC$LE_CORR_25, dat_SRC$G_F_MDS)
+      plot_2=ggplot(dat_SRC, aes(x=LE_CORR_25, y=G_F_MDS))  
+      plot_2+
+        geom_point()+
+        labs(x="latent heat flux", y="soil heat flux")+
+        geom_smooth(method="lm")
+  hf_shf_corr= cor.test(dat_SRC$LE_CORR_25, dat_SRC$G_F_MDS, method = "pearson", conf.level = 0.95)
 
-  gl+scale_x_date(breaks=date_breaks("months"),
-                  labels = date_format("%b"))
-  
-mean(swc1, na.rm=TRUE)
+  summary(lm(formula=dat_SRC$LE_CORR_25~dat_SRC$G_F_MDS))
 
+#cleaning up data by finding the monthly averages across seven years (swc and gpp)
+ library(lubridate)
+   dat_SRC$TIMESTAMP_START= ymd_hm(as.character(dat_SRC$TIMESTAMP_START))
+   df_1=dat_SRC$TIMESTAMP_START
+  #extract months and years either in number format (1) or word format (2)
+    dat_SRC$month= format(dat_SRC$TIMESTAMP_START, "%m")
+    dat_SRC$Month=months(dat_SRC$TIMESTAMP_START)
+    
+    dat_SRC$year=format(dat_SRC$TIMESTAMP_START, "%y")
+
+    
+   aggregate(df_1,
+             list()
+             dat_SRC$Month + dat_SRC$year, dat_SRC, mean)  
+
+  
+  
+  
