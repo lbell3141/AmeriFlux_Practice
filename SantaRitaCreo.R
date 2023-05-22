@@ -154,3 +154,10 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
       my_dat %>%
         group_by(c(dat_SRC$year, dat_SRC$Month)) %>%
         summarise_at(vars(dat_SRC$SWC_F_MDS_1), list(name=mean))
+
+      
+      
+      
+      
+      
+      
