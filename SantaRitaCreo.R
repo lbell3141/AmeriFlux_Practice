@@ -204,25 +204,98 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
 
 #plotting swc anomalies for April manually
     maj_Apr=print(subset(mon_avg_joined, mon=="April"))
+    
     mean(maj_Apr$val)
+    
     plot(maj_Apr$years, maj_Apr$val,
          abline(h=5.955438))
+
    std_swc_Apr=scale(maj_Apr$val)   
     plot(maj_Apr$years, std_swc_Apr,
          abline(h=0))   
+   mean(m)
+  #use ggplot to make plots for all months 
+   #all months in one plot
+   plot_one = ggplot(data = mon_avg, 
+                     mapping= aes(x= years, y= val, color = mon, group=mon))+
+     geom_line()
    
-#generating standardized plots for each month all at once!    
-    par(mfrow=c(3,4))
-    loop.vector= mon_avg_joined$mon
-    for (i in loop.vector){
-      x=mon_avg_joined$val[,i]
-    }
-    plot(x, scale()
-         )
-    
-    
-    
-    
+   plot_one
+   
+   #one plot for each month
+   plot_multi = ggplot(data= mon_avg,
+                       mapping = aes(x=years, y=val, group=1))+
+     geom_line()+
+     facet_wrap(~ mon)
+   plot_multi
+   
+   #calculate mean deviation by month
+   mon_avg_std = mon_avg %>% 
+     group_by(mon)%>%
+     mutate(smc_std= val - mean(val))
+   
+   plot_smc_std = ggplot(data= mon_avg_std,
+                       mapping = aes(x=years, y=smc_std, group=1))+
+     geom_line()+
+     facet_wrap(~ mon)+
+     geom_hline(yintercept =0, linetype= "dashed")
+  plot_smc_std 
+   
+#plotting for anomalies for gpp
+  #all months in one plot
+  plot_two = ggplot(data = mon_avg_gpp,
+                    mapping = aes(x=years, y=gpp, color = mon, group = mon))+
+    geom_line()
+  plot_two
+  
+  #one plot for each month
+  plot_multi_gpp = ggplot(data= mon_avg_gpp,
+                      mapping = aes(x=years, y=gpp, group=1))+
+    geom_line()+
+    facet_wrap(~ mon)
+  plot_multi_gpp
+  
+  #calculate mean deviation by month
+  mon_avg_gpp_std = mon_avg_gpp %>% 
+    group_by(mon)%>%
+    mutate(gpp_std= gpp - mean(gpp))
+  
+  plot_gpp_std = ggplot(data= mon_avg_gpp_std,
+                        mapping = aes(x=years, y=gpp_std, group=1))+
+    geom_line()+
+    facet_wrap(~ mon)+
+    geom_hline(yintercept =0, linetype= "dashed")
+  plot_gpp_std 
+  
+#plotting std swc with gpp monthly on separate plots
+  std_swc_gpp = print(left_join(mon_avg_gpp_std, mon_avg_std))
+  
+  plot_std_swcgpp = ggplot(data= std_swc_gpp,
+                        mapping = aes(x=smc_std, y=gpp_std, group=1))+
+    geom_line()+
+    facet_wrap(~ mon)+
+    geom_hline(yintercept =0, linetype= "dashed")
+  plot_std_swcgpp 
+  
+#plotting monthly std values for each year on one plot
+  plot_yr_one = ggplot(data = mon_avg_std,
+                    mapping = aes(x=mon, y=smc_std, color = years, group = years))+
+    geom_line()+
+    geom_hline(yintercept = 0, linetype="dashed")
+  plot_yr_one
+  
+#plotting monthly std values for each year separately 
+  plot_yr_swc_std = ggplot(data = mon_avg_std,
+                           mapping = aes(x=mon, y=smc_std, group=1, xlab("Month")))+
+    geom_line()+
+    facet_wrap(~years)+
+    geom_hline(yintercept = 0, linetype="dashed")
+  plot_yr_swc_std
+  
+  
+  
+  
+  
 #Loops
   #creating a df using for loops:
     #make empty df
