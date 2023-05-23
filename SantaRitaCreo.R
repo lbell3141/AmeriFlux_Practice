@@ -299,8 +299,74 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
 
   
   
+#annual averages of the growing season
+  #finding average swc for the growing season (May to Sept) in each month 
   
+  mon_avg_std = mon_avg %>% 
+    group_by(mon)%>%
+    mutate(smc_std= (val - mean(val))/sd(val))
+    print(mon_avg_std)
+    
+  #aug to nov instead
+  an_avg_swc = print(mon_avg_std[mon_avg_std$mon %in% c('May','June','July','August','September'),])
+    
+    an_std = an_avg_swc %>%
+    group_by(years) %>%
+    mutate(smc_an_std = mean(smc_std))
+  print(an_std)
   
+ ggplot(data = an_std, 
+        mapping = aes(x = years, y = smc_an_std))+
+   geom_point()
+  
+  t_an_std = mean(an_std$smc_an_std)
+    print(t_an_std)
+    
+  #finding averages but doing it right this time
+    #subset month-year data for growing season (Aug to Nov)
+    dat_grszn = print(my_dat[my_dat$mon %in% c('August','September','October','November'),])
+    
+  #find annual swc avg across all 7 years
+    grszn_mn = mean(dat_grszn$val, na.rm = TRUE)
+    grszn_sd = sd(dat_grszn$val, na.rm = TRUE)
+  
+    # lt.mean = mean(dat_grszn$val, na.rm = TRUE)
+    # lt.sd = mean(dat_grszn$val, na.rm = TRUE)
+    
+  #find annual swc (across all growing season months in the given year)
+    #plotting with z-score
+    dat_grszn = dat_grszn%>%
+      group_by(years)%>%
+      mutate(mn = mean(val))%>%
+      mutate(sd_an_z=(mn-grszn_mn)/(grszn_sd))
+    print(dat_grszn)
+  
+    plot(dat_grszn$years, dat_grszn$sd_an_z,
+         main = "SWC w/ Z-Score, 2008-2014",
+         xlab = "Years",
+         ylab = "SWC",
+         ylim = c(-0.5, 0.5),
+         type = 'l', lwd = 1)
+    points(dat_grszn$years, dat_grszn$sd_an)
+    abline(h = 0, lty = 3)
+    
+    #plotting anomalies 
+    dat_grszn = dat_grszn%>%
+      group_by(years)%>%
+      mutate(mn = mean(val))%>%
+      mutate(sd_an=(mn-grszn_mn))
+    print(dat_grszn)
+    
+    plot(dat_grszn$years, dat_grszn$sd_an, 
+         main = "SWC Anomalies, 2008-2014",
+         xlab = "Years",
+         ylab = "SWC",
+         ylim = c(-1.5,1.5),
+         type = 'l', lwd = 1)
+    points(dat_grszn$years, dat_grszn$sd_an)
+    abline(h = 0, lty = 3)
+    
+    
   
 #Loops
   #creating a df using for loops:
