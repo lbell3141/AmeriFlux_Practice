@@ -232,7 +232,10 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
    #calculate mean deviation by month
    mon_avg_std = mon_avg %>% 
      group_by(mon)%>%
-     mutate(smc_std= val - mean(val))
+     mutate(smc_std= val - mean(val))%>%
+     mutate(mon_abb = substr(x=mon, start=1, stop=3))%>%
+     mutate(mon_abb= factor(x=mon_abb, levels= month.abb))%>%
+     mutate(mon_fact = factor(x=mon, levels = month.name))
    
    plot_smc_std = ggplot(data= mon_avg_std,
                        mapping = aes(x=years, y=smc_std, group=1))+
@@ -286,11 +289,14 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
   
 #plotting monthly std values for each year separately 
   plot_yr_swc_std = ggplot(data = mon_avg_std,
-                           mapping = aes(x=mon, y=smc_std, group=1, xlab("Month")))+
+                           mapping = aes(x=mon_abb, y=smc_std, group=1, xlab("Month")))+
     geom_line()+
     facet_wrap(~years)+
-    geom_hline(yintercept = 0, linetype="dashed")
+    geom_hline(yintercept = 0, linetype="dashed")+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
   plot_yr_swc_std
+  
+
   
   
   
