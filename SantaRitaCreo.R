@@ -347,7 +347,7 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
          ylab = "SWC",
          ylim = c(-0.5, 0.5),
          type = 'l', lwd = 1)
-    points(dat_grszn$years, dat_grszn$sd_an)
+    points(dat_grszn$years, dat_grszn$sd_an_z)
     abline(h = 0, lty = 3)
     
     #plotting anomalies 
@@ -365,6 +365,17 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
          type = 'l', lwd = 1)
     points(dat_grszn$years, dat_grszn$sd_an)
     abline(h = 0, lty = 3)
+    
+#GPP anomalies 
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
   
