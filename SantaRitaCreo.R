@@ -324,7 +324,7 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
     
   #finding averages but doing it right this time
     #subset month-year data for growing season (Aug to Nov)
-    dat_grszn = print(my_dat[my_dat$mon %in% c('August','September','October','November'),])
+    dat_grszn = print(my_dat[my_dat$mon %in% c('July','August','September','October','November'),])
     
   #find annual swc avg across all 7 years
     grszn_mn = mean(dat_grszn$val, na.rm = TRUE)
@@ -367,18 +367,115 @@ plot(dat_SRC$TIMESTAMP_START, dat_SRC$SWC_F_MDS_1)
     abline(h = 0, lty = 3)
     
 #GPP anomalies 
+    grszn_gpp = print(my_gppdat[my_dat$mon %in% c('July','August','September','October','November'),])
     
+    #annual stats for all years:
+    grszn_gpp_mn = mean(grszn_gpp$gpp, na.rm = TRUE)
+    grszn_gpp_sd = sd(grszn_gpp$gpp, na.rm = TRUE)
     
+    grszn_gpp = grszn_gpp%>%
+      group_by(years)%>%
+      mutate(mn = mean(gpp))%>%
+      mutate(sd_an_z=(mn-grszn_gpp_mn)/(grszn_gpp_sd))
+    print(grszn_gpp)
     
-    
-    
-    
-    
-    
-    
-    
-    
+    plot(grszn_gpp$years, grszn_gpp$sd_an_z, 
+         main = "GPP w/ Z-Score, 2008-2014",
+         xlab = "Years",
+         ylab = "GPP",
+         ylim = c(-1.5,1.5),
+         type = 'l', lwd = 1)
+    points(grszn_gpp$years, grszn_gpp$sd_an_z)
+    abline(h = 0, lty = 3)
   
+#NEE anomalies     
+    dat_anom = print(data.frame(years = dat_SRC$year,
+                         mon = dat_SRC$Month,
+                         nee = dat_SRC$NEE_VUT_25,
+                         temp_atmos = dat_SRC$TA_F,
+                         temp_soil = dat_SRC$TS_F_MDS_1,
+                         precip = dat_SRC$P_F,
+                         ) )
+    
+    #grszn_anom = print(dat_anom[my_dat$mon %in% c('August','September','October','November'),])
+    grszn_anom = print(dat_anom[dat_anom$mon %in% c('August','September','October','November'),])
+    
+    nee_mn = mean(grszn_anom$nee, na.rm = TRUE)
+    nee_sd = sd(grszn_anom$nee, na.rm = TRUE)
+    
+    grszn_anom = grszn_anom%>%
+      group_by(years)%>%
+      mutate(mn_nee_mon = mean(nee))%>%
+      mutate(sd_nee_mon =(mn_nee_mon-nee_mn)/(nee_sd))
+    
+    
+    plot(grszn_anom$years, grszn_anom$sd_nee_mon, 
+         main = "NEE w/ Z-Score, 2008-2014",
+         xlab = "Years",
+         ylab = "NEE",
+         ylim = c(-1.5,1.5),
+         type = 'l', lwd = 1)
+    points(grszn_anom$years, grszn_anom$sd_nee_mon)
+    abline(h = 0, lty = 3)
+    
+#soil temp
+    soiltemp_mn = mean(grszn_anom$temp_soil, na.rm = TRUE)
+    soiltemp_sd = sd(grszn_anom$temp_soil, na.rm = TRUE)
+    
+    grszn_anom = grszn_anom%>%
+      group_by(years)%>%
+      mutate(mn_ts = mean(temp_soil))%>%
+      mutate(sd_ts =(mn_ts-soiltemp_mn)/(soiltemp_sd))
+    
+    plot(grszn_anom$years, grszn_anom$sd_ts, 
+         main = "Soil Temp w/ Z-Score, 2008-2014",
+         xlab = "Years",
+         ylab = "Soil Temp",
+         ylim = c(-0.5,0.5),
+         type = 'l', lwd = 1)
+    points(grszn_anom$years, grszn_anom$sd_ts)
+    abline(h = 0, lty = 3)  
+  
+#precip
+    precip_mn = mean(grszn_anom$precip, na.rm = TRUE)
+    precip_sd = sd(grszn_anom$precip, na.rm = TRUE)
+    
+    grszn_anom = grszn_anom%>%
+      group_by(years)%>%
+      mutate(mn_prcp_mon = mean(precip))%>%
+      mutate(sd_prcp_mon =(mn_prcp_mon-precip_mn)/(precip_sd))
+    
+    plot(grszn_anom$years, grszn_anom$sd_prcp_mon, 
+         main = "Precipitation w/ Z-Score, 2008-2014",
+         xlab = "Years",
+         ylab = "Precip",
+         ylim = c(-1.5,1.5),
+         type = 'l', lwd = 1)
+    points(grszn_anom$years, grszn_anom$sd_prcp_mon)
+    abline(h = 0, lty = 3)  
+    
+# air temp
+    airtemp_mn = mean(grszn_anom$temp_atmos, na.rm = TRUE)
+    airtemp_sd = sd(grszn_anom$temp_atmos, na.rm = TRUE)
+    
+    grszn_anom = grszn_anom%>%
+      group_by(years)%>%
+      mutate(mn_at = mean(temp_atmos) )%>%
+      mutate(sd_at = (mn_at-airtemp_mn)/(airtemp_sd))
+ 
+  plot(grszn_anom$years, grszn_anom$sd_at,
+       main = "Air Temp. w/ Z-Score, 2008-2014",
+       xlab = "Years",
+       ylab = "Air Temp",
+       ylim = c(-1.5, 1.5),
+       type = 'l', lwd = 1)
+  points(grszn_anom$years, grszn_anom$mn_at)
+  abline(h=0, lty = 3)
+  
+
+    
+    
+    
 #Loops
   #creating a df using for loops:
     #make empty df
