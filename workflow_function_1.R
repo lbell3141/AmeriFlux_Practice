@@ -29,40 +29,63 @@ dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
                                  temp_soil = dat_file$TS_F_MDS_1,
                                  precip = dat_file$P_F) )
   dat_file_fr = dat_file_fr[dat_file_fr$mon %in% c('July','August','September','October','November'),]
-  #standardizing data
-  
-  lt_mn = mean( , na.rm = TRUE)
-  lt_sd = sd( , na.rm = TRUE)
-  
-  grszn_anom = dat_file_fr%>%
-    group_by(years)%>%
-    mutate(st_mn = mean())%>%
-    mutate(st_stand =(st_mn - lt_mn)/(lt_sd))
-  
-  
-  colMeans(dat_file_fr[ , c(3:8)], na.rm = TRUE)
-  sapply(dat_file_fr[ , c(3:8)], sd, na.rm = TRUE)  
+ 
   
   
   
-  for (q in (dat_file_fr[ , c(3:8)])) {
-    lt_mn = mean(q , na.rm = TRUE)
-    lt_sd = sd(q , na.rm = TRUE)
-  }
-    grszn_anom = dat_file_fr%>%
-      group_by(years)%>%
-      mutate(st_mn = mean(q))%>%
-      mutate(st_stand =(st_mn - lt_mn)/(lt_sd))
-  }
+  
+   #standardizing data
+ 
+#after writing out on whiteboard...
+     #get dat frame
+     dat_file_fr
+     #find long term stats
+     
+     cols = 3:8
+     og_col_names = colnames(dat_file_fr)[cols]
+     col_mean = colMeans(dat_file_fr[, cols], na.rm = TRUE)
+     for (i in seq_along(cols)){
+       col_name = paste0("lt_mn_", og_col_names[i])
+       dat_file_fr[[col_name]] = col_mean[i]
+     }
+     
+     cols = 3:8
+     og_col_names = colnames(dat_file_fr)[cols]
+     col_sd = apply(dat_file_fr[, cols], 2, sd, na.rm = TRUE)
+     for (i in seq_along(cols)){
+       col_name = paste0("lt_sdev_", og_col_names[i])
+       dat_file_fr[[col_name]] = col_mean[i]
+     }
+     
+  #finding short term stats
+     columns = c("swc", "gpp", "nee", "temp_atmos", "temp_soil", "precip")
+     short_term_means = dat_file_fr%>%
+       group_by(yr)%>%
+       mutate(across(all_of(columns), mean, na.rm = TRUE))
+     
 
-for column in dat_file_fr {
-  lt_mn = mean(q , na.rm = TRUE)
-  lt_sd = sd(q , na.rm = TRUE)
-}
+     
+  #finding z score
+     variables = c("swc", "gpp", "nee", "temp_atmos", "temp_soil", "precip")
+     results = lapply(variables, function(variable){
+       lt_mean_col = paste0("lt_mn_", variable)
+       lt_sd_col = paste0("lt_sdev_", variable)
+         result = dat_file_fr%>%
+           group_by(yr)%>%
+           mutate(z_score = (short_term_means[[variable]]-.data[[lt_mean_col]])/.data[[lt_sd_col]])%>%
+            pull(z_score)
+            return(result)
+          })
+     
+        head(result_df)  
+      
+        
+  #join data to keep same length
+        joined_dat = left_join(dat_file_fr, short_term_means, by = c("yr", "mon"))
+head(joined_dat)
+     
 
-grszn_anom = dat_file_fr%>%
-  group_by(years)%>%
-  mutate(st_mn = mean(q))%>%
-  mutate(st_stand =(st_mn - lt_mn)/(lt_sd))
-}
-
+     
+     
+     
+     
