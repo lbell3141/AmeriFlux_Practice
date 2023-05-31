@@ -12,7 +12,7 @@ work_flow_1 = function(dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.cs
   
 }
 
-
+# checking line by line before trying the function
 #setting up data
 dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
   dat_file = read.csv(dat_file, header = TRUE, na.strings= "-9999", skip=0, sep = ",")
@@ -30,23 +30,20 @@ dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
                                  precip = dat_file$P_F) )
   dat_file_fr = dat_file_fr[dat_file_fr$mon %in% c('July','August','September','October','November'),]
  
-  
-  
-  
-  
-   #standardizing data
- 
-#after writing out on whiteboard...
-     #get dat frame
-     dat_file_fr
-     #find long term stats
+     #check dat frame
+     head(dat_file_fr)
      
+     #find long term stats and storing in data frame lt_dat
      cols = 3:8
      og_col_names = colnames(dat_file_fr)[cols]
      col_mean = colMeans(dat_file_fr[, cols], na.rm = TRUE)
+     lt_dat = data.frame(matrix(NA, nrow = nrow(dat_file_fr), ncol = length(cols)+2))
+     colnames(lt_dat) = c("yr", "mon", paste0("lt_mn_", og_col_names))
+     lt_dat[, 1:2] = dat_file_fr[, 1:2]
      for (i in seq_along(cols)){
        col_name = paste0("lt_mn_", og_col_names[i])
        dat_file_fr[[col_name]] = col_mean[i]
+       lt_dat[[col_name]] = col_mean[i]
      }
      
      cols = 3:8
@@ -54,16 +51,22 @@ dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
      col_sd = apply(dat_file_fr[, cols], 2, sd, na.rm = TRUE)
      for (i in seq_along(cols)){
        col_name = paste0("lt_sdev_", og_col_names[i])
-       dat_file_fr[[col_name]] = col_mean[i]
+       dat_file_fr[[col_name]] = col_sd[i]
+       lt_dat[[col_name]] = col_sd[i]
      }
-     
+
   #finding short term stats
      columns = c("swc", "gpp", "nee", "temp_atmos", "temp_soil", "precip")
      short_term_means = dat_file_fr%>%
        group_by(yr)%>%
        mutate(across(all_of(columns), mean, na.rm = TRUE))
-     
+  
+   
 
+         #join data to keep same length to prevent error below
+     joined_dat = left_join(lt_dat, short_term_means, by = c("yr", "mon"))
+     head(joined_dat)
+     
      
   #finding z score
      variables = c("swc", "gpp", "nee", "temp_atmos", "temp_soil", "precip")
@@ -72,18 +75,14 @@ dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
        lt_sd_col = paste0("lt_sdev_", variable)
          result = dat_file_fr%>%
            group_by(yr)%>%
+           #Issue with column lengths for line below
            mutate(z_score = (short_term_means[[variable]]-.data[[lt_mean_col]])/.data[[lt_sd_col]])%>%
             pull(z_score)
             return(result)
           })
      
         head(result_df)  
-      
-        
-  #join data to keep same length
-        joined_dat = left_join(dat_file_fr, short_term_means, by = c("yr", "mon"))
-head(joined_dat)
-     
+
 
      
      
