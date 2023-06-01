@@ -2,12 +2,12 @@
 #5/25/2023
 #Making a workflow function for plotting annual anomalies 
 
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
 
 work_flow_1 = function(dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv") {
-  library(lubridate)
-  library(dplyr)
-  library(ggplot2)
-  library(gridExtra)
   
   dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
   dat_file = read.csv(dat_file, header = TRUE, na.strings= "-9999", skip=0, sep = ",")
@@ -50,7 +50,6 @@ work_flow_1 = function(dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.cs
     distinct()
   
   joined_dat = left_join(lt_dat, short_term_means, by = "yr")
-  head(joined_dat)
   
   variables = c("swc", "gpp", "nee", "temp_atmos", "temp_soil", "precip")
   for (variable in variables){
@@ -65,19 +64,30 @@ work_flow_1 = function(dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.cs
       mutate(!!z_score_col := (.data[[st_mean_col]]-.data[[lt_mean_col]])/.data[[lt_sdev_col]])
   }
   
+  par(mfrow = c(2,3))
   z_score_vars = paste0("z_score_", variables)
   plots = lapply(z_score_vars, function(z_var){ 
-    ggplot(data = joined_dat, 
-           mapping = aes(x = yr, y = .data[[z_var]])) +
-      geom_point() + 
-      geom_line() +
-      geom_hline(yintercept = 0, linetype = "dashed") +
-      labs(title = z_var)
+    plot(joined_dat$yr, joined_dat[[z_var]],
+         main = z_var, 
+         xlab = "Year",
+         ylab = "Z-Score",
+         type = 'l', 
+         lwd = 1,
+    )
+    points(joined_dat$yr, joined_dat[[z_var]])
+    lines(joined_dat$yr, rep(0, length(joined_dat$yr)), lty = 2)
+    grid()
   })
-  grid.arrange(grobs = plots, ncol = 3)
-  
-  
+ 
 }
+
+
+
+
+
+
+
+
 
 # checking line by line before trying the function
 #setting up data
@@ -162,10 +172,33 @@ dat_file = "AMF_US-SRC_FLUXNET_SUBSET_HH_2008-2014_3-5.csv"
      })
           grid.arrange(grobs = plots, ncol = 3)
      
-     
-     
-     
-     
+#trying graphs without ggplot bc smthg abt it is whack
+          par(mfrow = c(2,3))
+          z_score_vars = paste0("z_score_", variables)
+          plots = lapply(z_score_vars, function(z_var){ 
+            plot(joined_dat$yr, joined_dat[[z_var]],
+                 main = z_var, 
+                 xlab = "Year",
+                 ylab = "Z-Score",
+                 type = 'l', 
+                 lwd = 1,
+                 )
+            points(joined_dat$yr, joined_dat[[z_var]])
+            lines(joined_dat$yr, rep(0, length(joined_dat$yr)), lty = 2)
+            grid()
+                            })
+                 
+
+          z_score_vars = paste0("z_score_", variables)
+          plots = lapply(z_score_vars, function(z_var){ 
+            ggplot(data = joined_dat, 
+                   mapping = aes(x = yr, y = .data[[z_var]])) +
+              geom_point() + 
+              geom_line() +
+              geom_hline(yintercept = 0, linetype = "dashed") +
+              labs(title = z_var)
+          })
+          grid.arrange(grobs = plots, ncol = 3)
 
   
 
